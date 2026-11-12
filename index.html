@@ -35,7 +35,7 @@
 </style></head>
 <body>
 <div class="shell">
-<header class="header"><div class="brand">이야기 속 수학 <span style="font-size:.65em;color:#526881">스마트폰 1인용</span></div><div class="tools"><button class="tool" id="speakBtn">🔊 읽기</button><button class="tool" id="fullBtn">⛶ 전체화면</button></div></header>
+<header class="header"><div class="brand">이야기 속 수학 <span style="font-size:.65em;color:#526881">스마트폰 1인용</span></div><div class="tools"><button class="tool" id="fullBtn">⛶ 전체화면</button></div></header>
 <main class="content" id="mainContent">
 
 <section class="problemBox"><div class="eyebrow" id="who">문제를 읽고 식을 만들어 보세요.</div><div class="question" id="question"></div></section>
@@ -230,21 +230,20 @@ function check(){
  if(stage==='formula'){
   if(!endedWithEquals)return;
   if(formula===active.formula+'='){stage='answer';errors.formula=0;feedback='식이 맞아요! 답을 입력해 보세요.';feedbackStyle='good'}
-  else if(errors.formula===0){errors.formula=1;feedback='식이 달라요. 다시 한번 만들어 보세요.';feedbackStyle='bad'}
-  else{queueReview();stage='answer';formula=active.formula+'=';feedback='올바른 식은 '+formula.replace(/-/g,' − ').replace(/\+/g,' ＋ ')+' 입니다. 답을 계산해 보세요.';feedbackStyle=''}
+  else if(errors.formula===0){errors.formula=1;feedback='오답이에요! 식이 틀렸어요. 지우기 버튼으로 고치고 다시 확인해 보세요.';feedbackStyle='bad'}
+  else{queueReview();stage='answer';feedback='오답이에요! 올바른 식은 '+(active.formula+'=').replace(/-/g,' − ').replace(/\+/g,' ＋ ')+' 입니다. 입력한 식은 그대로 두고 답을 계산해 보세요.';feedbackStyle='bad'}
  }else if(stage==='answer'){
   if(answer!==''&&Number(answer)===active.result){stage='reveal';feedback='정답이에요!';feedbackStyle='good'}
-  else if(errors.answer===0){errors.answer=1;feedback='다시 한 번 계산해 보세요.';feedbackStyle='bad'}
-  else{queueReview();stage='reveal';answer=String(active.result);feedback='정답은 '+active.result+active.unit+'입니다. 다음 문제에서 다시 연습해요.';feedbackStyle=''}
+  else if(errors.answer===0){errors.answer=1;feedback='오답이에요! 답이 틀렸어요. 지우기 버튼으로 고치고 다시 계산해 보세요.';feedbackStyle='bad'}
+  else{queueReview();stage='reveal';feedback='오답이에요! 정답은 '+active.result+active.unit+'입니다. 입력한 답은 그대로 두고 다음 문제에서 다시 연습해요.';feedbackStyle='bad'}
  }render();
 }
 function advance(){if(BOARD)turn=(turn+1)%players.length;nextProblem()}
 function skip(){if(active.isReview)queueReview();advance()}
-function readAloud(){if(!('speechSynthesis' in window)){feedback='이 기기는 읽어주기를 지원하지 않습니다.';render();return}window.speechSynthesis.cancel();const x=new SpeechSynthesisUtterance(active.text);x.lang='ko-KR';x.rate=.82;let v=window.speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith('ko'));if(v)x.voice=v;window.speechSynthesis.speak(x)}
 const keyOrder=['+','-','=','1','2','3','4','5','6','7','8','9','blank','0','del'];
 for(let k of keyOrder){let b=document.createElement('button');b.type='button';b.className='key'+(['+','-'].includes(k)?' operator':k==='='?' equal':k==='del'?' delete':k==='blank'?' blank':'');b.textContent=k==='del'?'⌫ 지우기':k==='-'?'−':k==='blank'?'':k;b.setAttribute('aria-label',k==='del'?'한 글자 지우기':k==='-'?'빼기':k==='+'?'더하기':k==='='?'등호':k);if(k!=='blank')b.dataset.key=k;else b.disabled=true;$('#keypad').append(b)}
 $('#keypad').addEventListener('click',e=>{let b=e.target.closest('[data-key]');if(b&&!b.disabled)put(b.dataset.key)});
-$('#checkBtn').addEventListener('click',check);$('#skipBtn').addEventListener('click',skip);$('#speakBtn').addEventListener('click',readAloud);
+$('#checkBtn').addEventListener('click',check);$('#skipBtn').addEventListener('click',skip);
 $('#fullBtn').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch(e){}});
 document.addEventListener('fullscreenchange',()=>$('#fullBtn').textContent=document.fullscreenElement?'⛶ 종료':'⛶ 전체화면');
 document.addEventListener('keydown',e=>{if(BOARD&& !$('#setup').hidden)return;if(e.ctrlKey||e.metaKey||e.altKey)return;let k=e.key;if(/^\d$/.test(k)||['+','-','='].includes(k))put(k);else if(k==='Backspace'){e.preventDefault();put('del')}else if(k==='Enter'){e.preventDefault();if(!$('#checkBtn').disabled)check()}});
